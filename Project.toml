@@ -1,0 +1,4 @@
+name = "BatchIterators"
+uuid = "4161f7c7-f4e7-47ff-bbcb-bc0b24702626"
+authors = ["CHATALIC Antoine <antoine.chatalic@irisa.fr>"]
+version = "0.1.0"
