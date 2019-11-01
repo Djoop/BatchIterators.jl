@@ -29,7 +29,6 @@ view_compatible(bi::BatchIterator) = view_compatible(bi.X)
 #######################################################################
 
 Base.length(it::BatchIterator)  = it.length
-toto
 function Base.iterate(it::BatchIterator{T}, st = 0) where T
 	st = st + 1				# new state
 	d = st - it.length		# > 0 means overflow, == 0 means last batch
