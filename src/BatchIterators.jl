@@ -28,15 +28,23 @@ view_compatible(bi::BatchIterator) = view_compatible(bi.X)
 #                              Matrices                               #
 #######################################################################
 
+function Base.getindex(it::BatchIterator, i)
+	d = i - it.length		# > 0 means overflow, == 0 means last batch
+	cbsz = (d == 0) ? mod(it.limit - 1, it.bsz) + 1 : it.bsz		# Size of current batch
+	if (i<1 || d > 0)
+		@error "Out of bounds."
+	else
+		view_compatible(it) ? (@view it.X[:, (i-1)*it.bsz+1:(i-1)*it.bsz+cbsz]) : it.X[:, (i-1)*it.bsz+1:(i-1)*it.bsz+cbsz]
+	end
+end
 Base.length(it::BatchIterator)  = it.length
 function Base.iterate(it::BatchIterator{T}, st = 0) where T
 	st = st + 1				# new state
 	d = st - it.length		# > 0 means overflow, == 0 means last batch
-	cbsz = (d == 0) ? mod(it.limit - 1, it.bsz) + 1 : it.bsz		# Size of current batch
 	if d > 0
 		nothing
 	else
-		view_compatible(it) ? ((@view it.X[:, (st-1)*it.bsz+1:(st-1)*it.bsz+cbsz]), st) : (it.X[:, (st-1)*it.bsz+1:(st-1)*it.bsz+cbsz], st)
+		(it[st], st)
 	end
 end
 
