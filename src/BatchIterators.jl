@@ -24,7 +24,12 @@ view_compatible(::Any) = false
 view_compatible(::Array) = true
 view_compatible(bi::BatchIterator) = view_compatible(bi.X)
 
-function Base.iterate(it::BatchIterator, st = 0)
+#######################################################################
+#                              Matrices                               #
+#######################################################################
+
+Base.length(it::BatchIterator)  = it.length
+function Base.iterate(it::BatchIterator{T}, st = 0) where T
 	st = st + 1				# new state
 	d = st - it.length		# > 0 means overflow, == 0 means last batch
 	cbsz = (d == 0) ? mod(it.limit - 1, it.bsz) + 1 : it.bsz		# Size of current batch
@@ -34,6 +39,10 @@ function Base.iterate(it::BatchIterator, st = 0)
 		view_compatible(it) ? ((@view it.X[:, (st-1)*it.bsz+1:(st-1)*it.bsz+cbsz]), st) : (it.X[:, (st-1)*it.bsz+1:(st-1)*it.bsz+cbsz], st)
 	end
 end
+
+#######################################################################
+#                              Utilities                              #
+#######################################################################
 
 """
 	choose_batchsize(d, n; maxmemGB = 1.0, maxbatchsize = 2^14, sizeoneB = d*sizeof(Float64))
