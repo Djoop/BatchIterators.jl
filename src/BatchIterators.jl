@@ -2,6 +2,7 @@ module BatchIterators
 
 export BatchIterator
 export choose_batchsize
+export centered_batch_iterator
 
 """
 	BatchIterator(X, bsz[, limit])
@@ -19,6 +20,16 @@ struct BatchIterator{T}
 		new{typeof(X)}(X, nb, bsz, limit)
 	end
 end
+
+# struct CenteredBatchIterator{T}
+	# bi::BatchIterator{T}
+	# μ
+	# function CenteredBatchIterator(X; kwargs...)
+		# bi = BatchIterator(X; kwargs...)
+		# μ = vec(mean(mean(b, dims=2) for b in BatchIterator(X)))
+		# new{typeof(X)}(bi, μ)
+	# end
+# end
 
 view_compatible(::Any) = false
 view_compatible(::Array) = true
@@ -41,11 +52,15 @@ Base.length(it::BatchIterator)  = it.length
 function Base.iterate(it::BatchIterator{T}, st = 0) where T
 	st = st + 1				# new state
 	d = st - it.length		# > 0 means overflow, == 0 means last batch
-	if d > 0
-		nothing
-	else
-		(it[st], st)
-	end
+	(d > 0) ?  nothing : (it[st], st)
+end
+
+# Base.length(it::CenteredBatchIterator) = length(it.bi)
+# Base.getindex(it::CenteredBatchIterator, i) = getindex(it, i) .- it.μ
+function centered_batch_iterator(X; kwargs...)
+	bi = BatchIterator(X; kwargs...)
+	μ = vec(mean(mean(b, dims=2) for b in BatchIterator(X)))
+	(b .- μ for b in bi)
 end
 
 #######################################################################
