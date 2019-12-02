@@ -1,5 +1,7 @@
 module BatchIterators
 
+using Statistics
+
 export BatchIterator
 export choose_batchsize
 export centered_batch_iterator
@@ -55,8 +57,11 @@ function Base.iterate(it::BatchIterator{T}, st = 0) where T
 	(d > 0) ?  nothing : (it[st], st)
 end
 
-# Base.length(it::CenteredBatchIterator) = length(it.bi)
-# Base.getindex(it::CenteredBatchIterator, i) = getindex(it, i) .- it.μ
+""" 
+	centered_batch_iterator(X; kwargs...)
+
+Similar to BatchIterator, but performs first one pass over the data to compute the mean, and centers the batches.
+"""
 function centered_batch_iterator(X; kwargs...)
 	bi = BatchIterator(X; kwargs...)
 	μ = vec(mean(mean(b, dims=2) for b in BatchIterator(X)))
