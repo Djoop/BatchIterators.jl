@@ -8,7 +8,8 @@ export centered_batch_iterator
 
 """
 	BatchIterator(X; batchsize = nothing, limit=size(X,2))
-Wrapper allowing to iterate over batches of `bsz` columns of `X`. `X` can be of any type supporting `size` and 2d indexing. When `limit` is provided, iteration is restricted to the columns of `X[:, 1:limit]`.
+
+Wrapper allowing to iterate over batches of `batchsize` columns of `X`. `X` can be of any type supporting `size` and 2d indexing. When `limit` is provided, iteration is restricted to the columns of `X[:, 1:limit]`.
 """
 struct BatchIterator{T}
 	X::T
@@ -23,22 +24,12 @@ struct BatchIterator{T}
 	end
 end
 
-# struct CenteredBatchIterator{T}
-	# bi::BatchIterator{T}
-	# μ
-	# function CenteredBatchIterator(X; kwargs...)
-		# bi = BatchIterator(X; kwargs...)
-		# μ = vec(mean(mean(b, dims=2) for b in BatchIterator(X)))
-		# new{typeof(X)}(bi, μ)
-	# end
-# end
-
 view_compatible(::Any) = false
 view_compatible(::Array) = true
 view_compatible(bi::BatchIterator) = view_compatible(bi.X)
 
 #######################################################################
-#                              Matrices                               #
+#                             Iteration                               #
 #######################################################################
 
 function Base.getindex(it::BatchIterator, i)
@@ -47,6 +38,7 @@ function Base.getindex(it::BatchIterator, i)
 	if (i<1 || d > 0)
 		@error "Out of bounds."
 	else
+		# TODO using views here might impact type stability.
 		view_compatible(it) ? (@view it.X[:, (i-1)*it.bsz+1:(i-1)*it.bsz+cbsz]) : it.X[:, (i-1)*it.bsz+1:(i-1)*it.bsz+cbsz]
 	end
 end
